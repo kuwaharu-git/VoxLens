@@ -184,8 +184,12 @@ def main():
             
             finally:
                 # Clean up temporary file
-                if os.path.exists(audio_path):
-                    os.unlink(audio_path)
+                try:
+                    if os.path.exists(audio_path):
+                        os.unlink(audio_path)
+                except OSError as e:
+                    # Log but don't fail if cleanup fails
+                    st.warning(f"一時ファイルの削除に失敗しました: {e}")
     
     # Footer
     st.divider()

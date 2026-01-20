@@ -64,7 +64,7 @@ class ConversationSummarizer:
         prompt = PromptTemplate.from_template(prompt_template)
         
         # Check if we should use MapReduce for long documents
-        if use_map_reduce or len(transcription) > 4000:
+        if use_map_reduce or len(transcription) > config.MAX_STUFF_CHAIN_LENGTH:
             # Use MapReduce for long documents
             chain = load_summarize_chain(
                 self.llm,

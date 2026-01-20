@@ -23,42 +23,6 @@ class AudioTranscriber:
                 compute_type=config.COMPUTE_TYPE if device == "cuda" else "int8"
             )
     
-    def transcribe_segment(self, audio_path: str, start_time: float, end_time: float) -> str:
-        """
-        Transcribe a specific segment of audio
-        
-        Args:
-            audio_path: Path to audio file
-            start_time: Start time in seconds
-            end_time: End time in seconds
-            
-        Returns:
-            Transcribed text for the segment
-        """
-        if self.model is None:
-            self.load_model()
-        
-        # Transcribe with timestamps
-        segments, _ = self.model.transcribe(
-            audio_path,
-            language="ja",  # Japanese language
-            beam_size=5,
-            vad_filter=True,
-            vad_parameters=dict(min_silence_duration_ms=500)
-        )
-        
-        # Filter segments within the time range
-        transcription_parts = []
-        for segment in segments:
-            # Check if segment overlaps with our time range
-            if segment.start >= start_time and segment.end <= end_time:
-                transcription_parts.append(segment.text.strip())
-            elif segment.start < end_time and segment.end > start_time:
-                # Partial overlap
-                transcription_parts.append(segment.text.strip())
-        
-        return " ".join(transcription_parts)
-    
     def transcribe_with_speakers(
         self, 
         audio_path: str, 
@@ -77,14 +41,33 @@ class AudioTranscriber:
         if self.model is None:
             self.load_model()
         
+        # Transcribe the entire audio once
+        segments, _ = self.model.transcribe(
+            audio_path,
+            language=config.TRANSCRIPTION_LANGUAGE,
+            beam_size=config.BEAM_SIZE,
+            vad_filter=config.VAD_FILTER,
+            vad_parameters=dict(min_silence_duration_ms=500)
+        )
+        
+        # Convert segments to a list for easier processing
+        all_segments = list(segments)
+        
         full_transcription = []
         
+        # Match transcribed segments with speaker segments
         for start_time, end_time, speaker_label in speaker_segments:
-            # Transcribe this segment
-            text = self.transcribe_segment(audio_path, start_time, end_time)
+            # Find all transcription segments that overlap with this speaker segment
+            segment_texts = []
             
-            if text.strip():  # Only add non-empty transcriptions
+            for segment in all_segments:
+                # Check if segment overlaps with speaker time range
+                if segment.start < end_time and segment.end > start_time:
+                    segment_texts.append(segment.text.strip())
+            
+            if segment_texts:  # Only add non-empty transcriptions
                 # Format as "SPEAKER_XX: text"
-                full_transcription.append(f"{speaker_label}: {text}")
+                combined_text = " ".join(segment_texts)
+                full_transcription.append(f"{speaker_label}: {combined_text}")
         
         return "\n".join(full_transcription)
