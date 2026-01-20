@@ -206,12 +206,12 @@ def main():
                     if diarizer is not None:
                         try:
                             diarizer.cleanup()
-                        except:
+                        except Exception:
                             pass
                     if transcriber is not None:
                         try:
                             transcriber.cleanup()
-                        except:
+                        except Exception:
                             pass
             
             finally:
