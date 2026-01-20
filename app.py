@@ -40,10 +40,13 @@ def main():
         st.header("⚙️ 設定")
         
         # HuggingFace token for pyannote
+        # Try to get default from environment variable
+        default_hf_token = os.getenv("HF_TOKEN", "")
         hf_token = st.text_input(
             "HuggingFace Token",
+            value=default_hf_token,
             type="password",
-            help="pyannote.audioを使用するために必要です"
+            help="pyannote.audioを使用するために必要です。環境変数HF_TOKENから自動読み込み可能。"
         )
         
         # Device selection
@@ -106,81 +109,110 @@ def main():
                 status_text.text("🗣️ 話者分離を実行中...")
                 progress_bar.progress(10)
                 
-                with st.spinner("話者を分離しています..."):
-                    diarizer = SpeakerDiarizer(huggingface_token=hf_token)
-                    speaker_segments = diarizer.diarize(audio_path)
+                diarizer = None
+                transcriber = None
                 
-                st.info(f"検出された話者セグメント数: {len(speaker_segments)}")
-                progress_bar.progress(35)
-                
-                # Step 2: Transcription
-                status_text.text("📝 文字起こしを実行中...")
-                
-                with st.spinner("音声を文字起こししています..."):
-                    transcriber = AudioTranscriber()
-                    full_transcription = transcriber.transcribe_with_speakers(
-                        audio_path,
-                        speaker_segments
-                    )
-                
-                progress_bar.progress(70)
-                
-                # Step 3: Summarization
-                status_text.text("📊 要約を生成中...")
-                
-                with st.spinner("LLMで要約を生成しています..."):
-                    summarizer = ConversationSummarizer()
-                    summary = summarizer.summarize(
-                        full_transcription,
-                        use_map_reduce=use_map_reduce
-                    )
-                
-                progress_bar.progress(100)
-                status_text.text("✅ 処理完了！")
-                
-                # Display results
-                st.success("🎉 処理が完了しました！")
-                
-                # Create two columns for results
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.header("📄 話者ラベル付き全文")
-                    st.text_area(
-                        "文字起こし結果",
-                        value=full_transcription,
-                        height=400,
-                        label_visibility="collapsed"
-                    )
+                try:
+                    with st.spinner("話者を分離しています..."):
+                        diarizer = SpeakerDiarizer(huggingface_token=hf_token)
+                        speaker_segments = diarizer.diarize(audio_path)
                     
-                    # Download button for transcription
-                    st.download_button(
-                        label="📥 全文をダウンロード",
-                        data=full_transcription,
-                        file_name="transcription.txt",
-                        mime="text/plain"
-                    )
-                
-                with col2:
-                    st.header("📊 要約結果")
-                    st.text_area(
-                        "要約",
-                        value=summary,
-                        height=400,
-                        label_visibility="collapsed"
-                    )
+                    st.info(f"検出された話者セグメント数: {len(speaker_segments)}")
+                    progress_bar.progress(35)
                     
-                    # Download button for summary
-                    st.download_button(
-                        label="📥 要約をダウンロード",
-                        data=summary,
-                        file_name="summary.txt",
-                        mime="text/plain"
-                    )
+                    # Cleanup diarizer to free VRAM for next step
+                    if diarizer is not None:
+                        diarizer.cleanup()
+                        del diarizer
+                        diarizer = None
+                    
+                    # Step 2: Transcription
+                    status_text.text("📝 文字起こしを実行中...")
+                    
+                    with st.spinner("音声を文字起こししています..."):
+                        transcriber = AudioTranscriber()
+                        full_transcription = transcriber.transcribe_with_speakers(
+                            audio_path,
+                            speaker_segments
+                        )
+                    
+                    progress_bar.progress(70)
+                    
+                    # Cleanup transcriber to free VRAM for next step
+                    if transcriber is not None:
+                        transcriber.cleanup()
+                        del transcriber
+                        transcriber = None
+                    
+                    # Step 3: Summarization
+                    status_text.text("📊 要約を生成中...")
+                    
+                    with st.spinner("LLMで要約を生成しています..."):
+                        summarizer = ConversationSummarizer()
+                        summary = summarizer.summarize(
+                            full_transcription,
+                            use_map_reduce=use_map_reduce
+                        )
+                    
+                    progress_bar.progress(100)
+                    status_text.text("✅ 処理完了！")
+                    
+                    # Display results
+                    st.success("🎉 処理が完了しました！")
+                    
+                    # Create two columns for results
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        st.header("📄 話者ラベル付き全文")
+                        st.text_area(
+                            "文字起こし結果",
+                            value=full_transcription,
+                            height=400,
+                            label_visibility="collapsed"
+                        )
+                        
+                        # Download button for transcription
+                        st.download_button(
+                            label="📥 全文をダウンロード",
+                            data=full_transcription,
+                            file_name="transcription.txt",
+                            mime="text/plain"
+                        )
+                    
+                    with col2:
+                        st.header("📊 要約結果")
+                        st.text_area(
+                            "要約",
+                            value=summary,
+                            height=400,
+                            label_visibility="collapsed"
+                        )
+                        
+                        # Download button for summary
+                        st.download_button(
+                            label="📥 要約をダウンロード",
+                            data=summary,
+                            file_name="summary.txt",
+                            mime="text/plain"
+                        )
                 
-            except Exception as e:
-                st.error(f"❌ エラーが発生しました: {str(e)}")
-                st.exception(e)
+                except Exception as e:
+                    st.error(f"❌ エラーが発生しました: {str(e)}")
+                    st.exception(e)
+                
+                finally:
+                    # Cleanup resources
+                    if diarizer is not None:
+                        try:
+                            diarizer.cleanup()
+                        except Exception:
+                            pass
+                    if transcriber is not None:
+                        try:
+                            transcriber.cleanup()
+                        except Exception:
+                            pass
             
             finally:
                 # Clean up temporary file
