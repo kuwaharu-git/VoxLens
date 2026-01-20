@@ -10,7 +10,7 @@ DIARIZATION_MODEL = "pyannote/speaker-diarization-3.1"
 TRANSCRIPTION_MODEL = "distil-large-v3"
 
 # Summarization model size (Ollama)
-# Available options: llama3.2:1b, llama3.2:3b, llama3.2:8b, llama3.1:8b, etc.
+# Available options: llama3.2:1b, llama3.2:3b, llama3.2:8b, llama3.1:8b, llama3.1:70b
 # Make sure the model is pulled with 'ollama pull <model_name>'
 LLM_MODEL = "llama3.2:8b"
 

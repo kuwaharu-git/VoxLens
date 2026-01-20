@@ -155,7 +155,7 @@ python -c "import torch; print(torch.cuda.is_available())"
 TRANSCRIPTION_MODEL = "large-v3"
 
 # 要約モデルのサイズを変更
-# 利用可能なオプション: llama3.2:1b, llama3.2:3b, llama3.2:8b, llama3.1:8b, など
+# 利用可能なオプション: llama3.2:1b, llama3.2:3b, llama3.2:8b, llama3.1:8b, llama3.1:70b
 # 小さいモデル（処理速度優先）: llama3.2:1b, llama3.2:3b
 # 大きいモデル（品質優先）: llama3.2:8b, llama3.1:70b
 LLM_MODEL = "llama3.2:3b"

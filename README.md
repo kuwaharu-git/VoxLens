@@ -106,11 +106,11 @@ VoxLens/
 `config.py`でモデルサイズを変更できます：
 
 **文字起こしモデル（faster-whisper）:**
-- 利用可能なサイズ: `tiny`, `base`, `small`, `medium`, `large`, `large-v3`, `distil-large-v3`
+- 利用可能なサイズ: `tiny`, `base`, `small`, `medium`, `large`, `large-v2`, `large-v3`, `distil-large-v2`, `distil-large-v3`
 - 小さいモデルは高速ですが精度が低く、大きいモデルは高精度ですが処理が遅くなります
 
 **要約モデル（Ollama LLM）:**
-- 利用可能なサイズ: `llama3.2:1b`, `llama3.2:3b`, `llama3.2:8b`, など
+- 利用可能なサイズ: `llama3.2:1b`, `llama3.2:3b`, `llama3.2:8b`, `llama3.1:8b`, `llama3.1:70b`
 - モデルを変更した場合は `ollama pull <モデル名>` でダウンロードが必要です
 
 詳細は[USAGE.md](USAGE.md)を参照してください。
