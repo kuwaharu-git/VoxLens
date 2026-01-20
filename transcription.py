@@ -84,6 +84,8 @@ class AudioTranscriber:
     def cleanup(self):
         """Cleanup method to release resources and clear VRAM"""
         if self.model is not None:
+            # faster-whisper uses CTranslate2 backend which doesn't have .to() method
+            # Simply delete the model object to free resources
             del self.model
             self.model = None
         self.clear_cache()
