@@ -2,6 +2,7 @@
 Transcription module using faster-whisper
 """
 from typing import List, Tuple
+import torch
 from faster_whisper import WhisperModel
 import config
 
@@ -70,4 +71,19 @@ class AudioTranscriber:
                 combined_text = " ".join(segment_texts)
                 full_transcription.append(f"{speaker_label}: {combined_text}")
         
+        # Clear VRAM cache after inference to optimize memory usage
+        self.clear_cache()
+        
         return "\n".join(full_transcription)
+    
+    def clear_cache(self):
+        """Clear GPU cache to free VRAM after inference"""
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+    
+    def cleanup(self):
+        """Cleanup method to release resources and clear VRAM"""
+        if self.model is not None:
+            del self.model
+            self.model = None
+        self.clear_cache()
