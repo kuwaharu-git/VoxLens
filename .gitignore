@@ -205,3 +205,11 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# VoxLens specific
+*.mp3
+*.wav
+*.m4a
+uploads/
+temp_audio/
+.streamlit/
