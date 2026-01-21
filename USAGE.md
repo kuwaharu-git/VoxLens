@@ -145,14 +145,27 @@ python -c "import torch; print(torch.cuda.is_available())"
 
 ### カスタムモデルの使用
 
-`config.py`を編集して、異なるモデルを使用できます：
+`config.py`を編集して、異なるモデルサイズを使用できます：
 
 ```python
-# 異なるWhisperモデルを使用
+# 文字起こしモデルのサイズを変更
+# 利用可能なオプション: tiny, base, small, medium, large, large-v2, large-v3, distil-large-v2, distil-large-v3
+# 小さいモデル（処理速度優先）: tiny, base, small
+# 大きいモデル（精度優先）: large-v3, distil-large-v3
 TRANSCRIPTION_MODEL = "large-v3"
 
-# 異なるLLMモデルを使用
-LLM_MODEL = "llama3.1:70b"
+# 要約モデルのサイズを変更
+# 利用可能なオプション: llama3.2:1b, llama3.2:3b, llama3.2:8b, llama3.1:8b, llama3.1:70b
+# 小さいモデル（処理速度優先）: llama3.2:1b, llama3.2:3b
+# 大きいモデル（品質優先）: llama3.2:8b, llama3.1:70b
+LLM_MODEL = "llama3.2:3b"
+```
+
+**注意**: モデルを変更した場合は、Ollamaで事前にダウンロードする必要があります：
+
+```bash
+# 例: llama3.2:3bをダウンロード
+ollama pull llama3.2:3b
 ```
 
 ### バッチ処理
